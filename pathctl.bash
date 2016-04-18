@@ -52,6 +52,12 @@ pathctl_unshift() {
   fi
 }
 
+pathctl_unshift_f() {
+  local _path=$1
+  PATH=$_path:$PATH
+  pathctl_uniq
+}
+
 pathctl_push() {
   local _path=$1
   __pathctl_changed=""
@@ -67,6 +73,12 @@ pathctl_push() {
   fi
 }
 
+pathctl_push_f() {
+  local _path=$1
+  PATH=$PATH:$_path
+  pathctl_uniq
+}
+
 pathctl_pop() {
   PATH=${PATH%:*}
 }
@@ -76,9 +88,19 @@ pathctl_shift() {
 }
 
 pathctl_uniq() {
-  local _hash _p _path
+  local _hash _p _ary __ary _i _path
+  local _reverse=${1:-}
   declare -A _hash
-  for _p in $(echo $PATH | tr ':' ' '); do
+
+  _ary=($(echo $PATH | tr ':' ' '))
+  if [ $_reverse ]; then
+    for (( _i=$(#_ary[@]}-1 ; _i >= 0 ; _i -- )) ; do
+      __ary+=(${_ary[$_i]})
+    done
+    _ary=${__ary[@]}
+  fi
+
+  for _p in ${_ary[@]}; do
     if [[ ${_hash[$_p]} ]]; then
       continue
     fi
